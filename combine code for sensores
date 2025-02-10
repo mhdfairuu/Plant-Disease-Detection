@@ -1,0 +1,80 @@
+#include <DHT.h>
+
+// Define pin assignments for all sensors
+const int smokeSensorPin = A0;        // Pin where the smoke sensor is connected
+const int soundSensorPin = A1;        // Pin where the sound sensor is connected
+const int vibrationSensorPin = D1;    // Pin where the vibration sensor is connected
+#define DHTPIN D2                      // D2 corresponds to GPIO4 on NodeMCU
+#define DHTTYPE DHT11                  // Use DHT22 if you're using a DHT22 sensor
+
+// Create an instance of the DHT sensor
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  // Start serial communication for monitoring readings
+  Serial.begin(115200);
+  
+  // Initialize the DHT sensor
+  dht.begin();
+  
+  // Set the vibration sensor pin as an input
+  pinMode(vibrationSensorPin, INPUT);
+  
+  // Set the sound sensor pin as an input
+  pinMode(soundSensorPin, INPUT);
+  
+  // Initialize smoke sensor pin (using A0 pin)
+  pinMode(smokeSensorPin, INPUT);
+}
+
+void loop() {
+  // --- Smoke Detection ---
+  int smokeLevel = analogRead(smokeSensorPin); // Read smoke sensor value
+  Serial.print("Smoke Level: ");
+  Serial.println(smokeLevel);  // Print value to Serial Monitor
+  if (smokeLevel > 500) {
+    Serial.println("Smoke Detected!");
+  } else {
+    Serial.println("No Smoke");
+  }
+
+  // --- Temperature and Humidity Readings ---
+  delay(2000);  // 2 seconds delay before reading temperature and humidity
+  
+  float temperature = dht.readTemperature();  // Read temperature in Celsius
+  float humidity = dht.readHumidity();      // Read humidity in percentage
+
+  Serial.print("Temp: ");
+  Serial.print(temperature);
+  Serial.print(" C\tHumidity: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+
+  // --- Sound Detection ---
+  int soundSensorValue = analogRead(soundSensorPin); // Read the sound sensor value
+  Serial.print("Sound Sensor Value: ");
+  Serial.println(soundSensorValue);
+
+  // --- Vibration Detection ---
+  int vibrationState = digitalRead(vibrationSensorPin);  // Read vibration sensor state
+  if (vibrationState == HIGH) {
+    Serial.println("Vibration detected!");
+  } else {
+    Serial.println("No vibration detected.");
+  }
+
+  // Control irrigation (optional feature)
+  // You can add logic to activate/deactivate irrigation systems based on certain conditions,
+  // for example: if smoke detected or if temperature exceeds a threshold.
+
+  // Example: If smoke is detected, turn on irrigation system (assuming a relay is connected to pin D3)
+  if (smokeLevel > 500) {
+    Serial.println("Activating irrigation system due to smoke!");
+    // digitalWrite(D3, HIGH);  // Turn on irrigation system (if relay is connected)
+  } else {
+    // digitalWrite(D3, LOW);  // Turn off irrigation system
+    Serial.println("Irrigation system off.");
+  }
+
+  delay(500);  // Delay of 500 ms before reading sensors again
+}
